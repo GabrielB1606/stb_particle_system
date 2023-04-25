@@ -22,6 +22,14 @@
 #ifndef STB_PARTICLE_SYSTEM_H
 #define STB_PARTICLE_SYSTEM_H
 
+struct ParticleProps{
+    glm::vec2 position;
+    glm::vec2 velocity, velocity_variation;
+    glm::vec4 color_begin, color_end;
+    float size_begin, size_end, size_variation;
+    float life_time = 1.f;
+};
+
 #endif // Header
 
 #ifdef STB_PARTICLE_SYSTEM_IMPLEMENTATION
