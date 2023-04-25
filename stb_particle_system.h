@@ -3,7 +3,7 @@
 // To build this, in one source file that includes this file do
 //      #define STB_INCLUDE_IMPLEMENTATION
 //
-// DESCIPTION [to do]
+// DESCRIPTION [to do]
 //
 // Options:
 //
@@ -15,6 +15,10 @@
 //      stdlib.h    malloc, realloc, free
 //      string.h    strcpy, strncmp, memcpy
 //
+// External libraries:
+// 
+//      glm 0.9.6.4
+// 
 // Credits:
 //
 // Written by Gabriel Belisario
