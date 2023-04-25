@@ -29,6 +29,8 @@
 #define STB_PARTICLE_SYSTEM_H
 
 #include <vector>
+#include <cstdlib>
+#include <ctime>
 
 struct ParticleProps{
     glm::vec2 position;
@@ -85,6 +87,28 @@ void ParticleSystem::onRender(){
 }
 
 void ParticleSystem::Emit(const ParticleProps &props){
+
+    Particle& part = this->particle_pool[pool_index];
+    part.active = true;
+    part.position = props.position;
+    part.rotation = ((float) rand() / RAND_MAX) * 2.f * glm::pi<float>();
+
+    // velocity
+    part.velocity = props.velocity;
+    part.velocity.x += props.velocity_variation.x * ( ((float) rand() / RAND_MAX) - 0.5f );
+    part.velocity.y += props.velocity_variation.y * ( ((float) rand() / RAND_MAX) - 0.5f );
+
+    // color
+    part.color_begin = props.color_begin;
+    part.color_end = props.color_end;
+
+    part.life_time = props.life_time;
+    part.life_remaining = props.life_time;
+    part.size_begin = props.size_begin + props.size_variation* ( ((float) rand() / RAND_MAX) - 0.5f );
+    part.size_end = props.size_end;
+
+    pool_index = --pool_index % particle_pool.size();
+
 }
 
 #endif // Implementation
