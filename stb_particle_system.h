@@ -64,7 +64,7 @@ class ParticleSystem{
 public:
     ParticleSystem();
 
-    void onUpdate();
+    void onUpdate(float time_step);
     void onRender();
 
     void Emit(const ParticleProps& props);
@@ -78,8 +78,21 @@ ParticleSystem::ParticleSystem(){
     particle_pool.resize(1000);
 }
 
-void ParticleSystem::onUpdate(){
+void ParticleSystem::onUpdate(float time_step){
 
+    for(Particle& part : particle_pool){
+        
+        if( part.life_remaining <= 0.f )
+            part.active = false;
+        
+        if( !part.active )
+            continue;        
+
+        part.life_remaining -= time_step;
+        part.position += part.velocity * time_step;
+        part.rotation += 0.01f * time_step;
+
+    }
 
 }
 
