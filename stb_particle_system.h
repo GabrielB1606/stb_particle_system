@@ -59,19 +59,21 @@ class ParticleSystem{
     uint32_t pool_index = 999;
 
     unsigned int quad_VA = 0;
+    unsigned int transform_uniform_loc, color_uniform_loc;
     // shader and transformations
 
 public:
     ParticleSystem();
 
     void onUpdate(float time_step);
-    void onRender();
+    void onRender(unsigned int shader_id);
 
     void Emit(const ParticleProps& props);
 };
 
 #endif // Header
 
+#define STB_PARTICLE_SYSTEM_IMPLEMENTATION
 #ifdef STB_PARTICLE_SYSTEM_IMPLEMENTATION
 
 ParticleSystem::ParticleSystem(){
@@ -96,7 +98,70 @@ void ParticleSystem::onUpdate(float time_step){
 
 }
 
-void ParticleSystem::onRender(){
+void ParticleSystem::onRender(unsigned int shader_id){
+
+    if (!quad_VA){
+
+		float vertices[] = {
+			 -0.5f, -0.5f, 0.0f,
+			  0.5f, -0.5f, 0.0f,
+			  0.5f,  0.5f, 0.0f,
+			 -0.5f,  0.5f, 0.0f
+		};
+
+		glCreateVertexArrays(1, &quad_VA);
+		glBindVertexArray(quad_VA);
+
+		GLuint quadVB, quadIB;
+		glCreateBuffers(1, &quadVB);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVB);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glEnableVertexArrayAttrib(quadVB, 0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+
+		uint32_t indices[] = {
+			0, 1, 2, 2, 3, 0
+		};
+
+		glCreateBuffers(1, &quadIB);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIB);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+		// m_ParticleShader = std::unique_ptr<GLCore::Utils::Shader>(GLCore::Utils::Shader::FromGLSLTextFiles("assets/shader.glsl.vert", "assets/shader.glsl.frag"));
+		// m_ParticleShaderViewProj = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_ViewProj");
+		// m_ParticleShaderTransform = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Transform");
+		// m_ParticleShaderColor = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Color");
+        transform_uniform_loc = glGetUniformLocation(shader_id, "u_Transform");
+        color_uniform_loc = glGetUniformLocation(shader_id, "u_Color");
+	}
+
+    // glUseProgram(m_ParticleShader->GetRendererID());
+	// glUniformMatrix4fv(m_ParticleShaderViewProj, 1, GL_FALSE, glm::value_ptr(camera.GetViewProjectionMatrix()));
+
+    for (Particle& particle : particle_pool){
+		if (!particle.active)
+			continue;
+
+		// Fade away particles
+		float life = particle.life_remaining / particle.life_time;
+		glm::vec4 color = glm::lerp(particle.color_end, particle.color_begin, life);
+		//color.a = color.a * life;
+
+		float size = glm::lerp(particle.size_end, particle.size_begin, life);
+		
+		// Render
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), { particle.position.x, particle.position.y, 0.0f })
+			* glm::rotate(glm::mat4(1.0f), particle.rotation, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size, size, 1.0f });
+
+		glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transform));
+		glUniform4fv(color_uniform_loc, 1, glm::value_ptr(color));
+		
+        glBindVertexArray(quad_VA);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	}
+
 }
 
 void ParticleSystem::Emit(const ParticleProps &props){
