@@ -11,17 +11,19 @@
 //
 // Standard libraries:
 //
-//      stdio.h     FILE, fopen, fclose, fseek, ftell
-//      stdlib.h    malloc, realloc, free
-//      string.h    strcpy, strncmp, memcpy
+//      vector
+//      cstdlib     rand, srand
+//      ctime       time
 //
 // External libraries:
 // 
 //      glm 0.9.6.4
+//      openGL (glad or glew)
 // 
 // Credits:
 //
 // Written by Gabriel Belisario
+
 #define STB_PARTICLE_SYSTEM_DEV
 
 #ifdef STB_PARTICLE_SYSTEM_DEV
@@ -64,13 +66,13 @@ class ParticleSystem{
     uint32_t pool_index = 999;
 
     unsigned int quad_VA = 0;
-    unsigned int transform_uniform_loc, color_uniform_loc;
+    unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
 
 public:
     ParticleSystem();
 
     void onUpdate(float time_step);
-    void onRender(unsigned int shader_id);
+    void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
 
     void Emit(const ParticleProps& props);
 };
@@ -101,7 +103,7 @@ void ParticleSystem::onUpdate(float time_step){
 
 }
 
-void ParticleSystem::onRender(unsigned int shader_id){
+void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_matrix){
 
     if (!quad_VA){
 
@@ -135,12 +137,13 @@ void ParticleSystem::onRender(unsigned int shader_id){
 		// m_ParticleShaderViewProj = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_ViewProj");
 		// m_ParticleShaderTransform = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Transform");
 		// m_ParticleShaderColor = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Color");
+        projview_uniform_loc = glGetUniformLocation(shader_id, "u_ProjView");
         transform_uniform_loc = glGetUniformLocation(shader_id, "u_Transform");
         color_uniform_loc = glGetUniformLocation(shader_id, "u_Color");
 	}
 
-    // glUseProgram(m_ParticleShader->GetRendererID());
-	// glUniformMatrix4fv(m_ParticleShaderViewProj, 1, GL_FALSE, glm::value_ptr(camera.GetViewProjectionMatrix()));
+    glUseProgram(shader_id);
+	glUniformMatrix4fv(projview_uniform_loc, 1, GL_FALSE, glm::value_ptr(projection_view_matrix));
 
     for (Particle& particle : particle_pool){
 		if (!particle.active)
