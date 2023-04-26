@@ -134,9 +134,6 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 		// m_ParticleShader = std::unique_ptr<GLCore::Utils::Shader>(GLCore::Utils::Shader::FromGLSLTextFiles("assets/shader.glsl.vert", "assets/shader.glsl.frag"));
-		// m_ParticleShaderViewProj = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_ViewProj");
-		// m_ParticleShaderTransform = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Transform");
-		// m_ParticleShaderColor = glGetUniformLocation(m_ParticleShader->GetRendererID(), "u_Color");
         projview_uniform_loc = glGetUniformLocation(shader_id, "u_ProjView");
         transform_uniform_loc = glGetUniformLocation(shader_id, "u_Transform");
         color_uniform_loc = glGetUniformLocation(shader_id, "u_Color");
