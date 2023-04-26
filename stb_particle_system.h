@@ -22,8 +22,12 @@
 // Credits:
 //
 // Written by Gabriel Belisario
+#define STB_PARTICLE_SYSTEM_DEV
 
+#ifdef STB_PARTICLE_SYSTEM_DEV
+#define STB_PARTICLE_SYSTEM_IMPLEMENTATION
 #include "headers.h"
+#endif
 
 #ifndef STB_PARTICLE_SYSTEM_H
 #define STB_PARTICLE_SYSTEM_H
@@ -32,12 +36,13 @@
 #include <cstdlib>
 #include <ctime>
 
+// All atributes that can be asigned to the particle system from software
 struct ParticleProps{
-    glm::vec2 position;
-    glm::vec2 velocity, velocity_variation;
-    glm::vec4 color_begin, color_end;
-    float size_begin, size_end, size_variation;
-    float life_time = 1.f;
+    glm::vec2 position; // where the particles will be generated
+    glm::vec2 velocity, velocity_variation; // rate which the particles will be generated
+    glm::vec4 color_begin, color_end; // color of the particle
+    float size_begin, size_end, size_variation; // size of the particle
+    float life_time = 1.f; // how long should a particle be render
 };
 
 class ParticleSystem{
@@ -60,7 +65,6 @@ class ParticleSystem{
 
     unsigned int quad_VA = 0;
     unsigned int transform_uniform_loc, color_uniform_loc;
-    // shader and transformations
 
 public:
     ParticleSystem();
@@ -73,7 +77,6 @@ public:
 
 #endif // Header
 
-#define STB_PARTICLE_SYSTEM_IMPLEMENTATION
 #ifdef STB_PARTICLE_SYSTEM_IMPLEMENTATION
 
 ParticleSystem::ParticleSystem(){
