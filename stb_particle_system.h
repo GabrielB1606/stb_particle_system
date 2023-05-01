@@ -47,6 +47,11 @@ struct ParticleProps{
     float life_time = 10.f; // how long should a particle be render
 };
 
+enum PSenum{
+    PS_DRAW_ELEMENTS,
+    PS_DRAW_ELEMENTS_BASE_VERTEX
+};
+
 class ParticleSystem{
 
     struct Particle{
@@ -65,19 +70,23 @@ class ParticleSystem{
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 999;
 
-    unsigned int quad_VA = 0, quad_VB = 0, quad_IB = 0;
-    unsigned int indices[6] = { 2, 1, 0, 2, 0, 3 };
-    float vertices[12] = {
-       -1.f, -1.f, 0.0f,
-        1.f, -1.f, 0.0f,
-        1.f,  1.f, 0.0f,
-       -1.f,  1.f, 0.0f
-    };
+    // particle model
+    unsigned int VAO = 0;
+    GLenum mode = GL_TRIANGLES;
+    GLsizei indices_count = 0;
+    GLenum indices_type = GL_UNSIGNED_INT;
+    void* indices = nullptr;
+    GLint basevertex = 0;
 
     unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
 
+    void psDrawElementsBaseVertex(unsigned int shader_id);
+    // void psDrawElements(glm::mat4 projection_view_matrix);
+
 public:
     ParticleSystem();
+
+    void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
 
     void onUpdate(float time_step);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
@@ -89,22 +98,44 @@ public:
 
 #ifdef STB_PARTICLE_SYSTEM_IMPLEMENTATION
 
+inline void ParticleSystem::psDrawElementsBaseVertex(unsigned int shader_id){
+
+    glUseProgram(shader_id);
+
+    glBindVertexArray(this->VAO);
+
+    glDrawElementsBaseVertex(
+        this->mode,
+        this->indices_count,
+        this->indices_type,
+        this->indices,
+        this->basevertex
+    );
+    
+    //  for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "stb_particle_system psDrawElementsBaseVertex\nOpenGL error: " << error << std::endl;
+    }
+
+    glBindVertexArray(0);
+    glUseProgram(0);
+
+}
+
 ParticleSystem::ParticleSystem(){
     particle_pool.resize(1000);
 
-    glCreateVertexArrays(1, &quad_VA);
-    glBindVertexArray(quad_VA);
+}
 
-    glCreateBuffers(1, &quad_VB);
-    glBindBuffer(GL_ARRAY_BUFFER, quad_VB);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+void ParticleSystem::attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex){
 
-    glEnableVertexArrayAttrib(quad_VB, 0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    this->VAO = VAO;
+    this->indices_count = count;
+    this->indices_type = type;
+    this->indices = indices;
+    this->basevertex = basevertex;
 
-    glCreateBuffers(1, &quad_IB);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_IB);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
 
 void ParticleSystem::onUpdate(float time_step){
@@ -117,7 +148,7 @@ void ParticleSystem::onUpdate(float time_step){
         if( !part.active )
             continue;        
 
-        part.life_remaining -= time_step;
+        // part.life_remaining -= time_step;
         part.position += part.velocity * time_step;
         part.rotation += 0.01f * time_step;
 
@@ -147,15 +178,14 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 		float size = glm::lerp(particle.size_end, particle.size_begin, life);
 		
 		// Render
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), particle.position);
-			// * glm::rotate(glm::mat4(1.0f), particle.rotation, { 0.0f, 0.0f, 1.0f })
-			// * glm::scale(glm::mat4(1.0f), { size, size, 1.0f });
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), particle.position)
+			* glm::rotate(glm::mat4(1.0f), particle.rotation, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size, size, 1.0f });
 
 		glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transform));
 		glUniform4fv(color_uniform_loc, 1, glm::value_ptr(color));
 		
-        glBindVertexArray(quad_VA);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        psDrawElementsBaseVertex(shader_id);
 	}
 
 }
