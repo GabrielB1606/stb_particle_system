@@ -148,7 +148,7 @@ void ParticleSystem::onUpdate(float time_step){
         if( !part.active )
             continue;        
 
-        // part.life_remaining -= time_step;
+        part.life_remaining -= time_step;
         part.position += part.velocity * time_step;
         part.rotation += 0.01f * time_step;
 
