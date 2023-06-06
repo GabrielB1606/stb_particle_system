@@ -40,11 +40,11 @@
 
 // All atributes that can be asigned to the particle system from software
 struct ParticleProps{
-    glm::vec3 position; // where the particles will be generated
-    glm::vec3 velocity, velocity_variation; // rate which the particles will be generated
-    glm::vec4 color_begin, color_end; // color of the particle
-    float size_begin, size_end, size_variation; // size of the particle
-    float life_time = 10.f; // how long should a particle be render
+    glm::vec3 position = glm::vec3(0.f); // where the particles will be generated
+    glm::vec3 velocity = glm::vec3(0.f), velocity_variation = glm::vec3(0.f), acceleration = glm::vec3(0.f);
+    glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f); // color of the particle
+    float size_begin = 1.f, size_end = 1.f, size_variation = 0.f; // size of the particle
+    float life_time = 2.f; // how long should a particle be render
 };
 
 enum PSenum{
@@ -56,7 +56,7 @@ class ParticleSystem{
 
     struct Particle{
         glm::vec3 position;
-        glm::vec3 velocity;
+        glm::vec3 velocity, acceleration;
         glm::vec4 color_begin, color_end;
         float rotation = 0.f;
         float size_begin, size_end;
@@ -69,6 +69,8 @@ class ParticleSystem{
 
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 999;
+    float spawn_rate = 3.f, curr_spawn_rate = -1.f;
+    ParticleProps props;
 
     // particle model
     unsigned int VAO = 0;
@@ -87,11 +89,12 @@ public:
     ParticleSystem();
 
     void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
+    void attatchProps(const ParticleProps& props);
 
     void onUpdate(float time_step);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
 
-    void Emit(const ParticleProps& props);
+    void emit(const ParticleProps& props);
 };
 
 #endif // Header
@@ -99,11 +102,20 @@ public:
 #ifdef STB_PARTICLE_SYSTEM_IMPLEMENTATION
 
 inline void ParticleSystem::psDrawElementsBaseVertex(unsigned int shader_id){
+    GLenum error;
 
     glUseProgram(shader_id);
-
+//  for OpenGL errors
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "stb_particle_system psUseProgram\nOpenGL error: " << error << std::endl;
+    }
     glBindVertexArray(this->VAO);
-
+//  for OpenGL errors
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "stb_particle_system psBindVAO\nOpenGL error: " << error << std::endl;
+    }
     glDrawElementsBaseVertex(
         this->mode,
         this->indices_count,
@@ -113,18 +125,19 @@ inline void ParticleSystem::psDrawElementsBaseVertex(unsigned int shader_id){
     );
     
     //  for OpenGL errors
-    GLenum error = glGetError();
+    error = glGetError();
     if (error != GL_NO_ERROR) {
         std::cerr << "stb_particle_system psDrawElementsBaseVertex\nOpenGL error: " << error << std::endl;
     }
 
-    glBindVertexArray(0);
-    glUseProgram(0);
+    // glBindVertexArray(0);
+    // glUseProgram(0);
 
 }
 
 ParticleSystem::ParticleSystem(){
     particle_pool.resize(1000);
+    curr_spawn_rate = 0.f;
 
 }
 
@@ -138,7 +151,18 @@ void ParticleSystem::attatchVAO(unsigned int VAO, GLsizei count, GLenum type, vo
 
 }
 
+void ParticleSystem::attatchProps(const ParticleProps &props){
+    this->props = props; 
+}
+
 void ParticleSystem::onUpdate(float time_step){
+
+    curr_spawn_rate += time_step;
+    if(curr_spawn_rate > spawn_rate){
+        this->emit(this->props);
+        curr_spawn_rate = 0.f;
+        std::cout << "gen\n";   
+    }
 
     for(Particle& part : particle_pool){
         
@@ -150,13 +174,15 @@ void ParticleSystem::onUpdate(float time_step){
 
         part.life_remaining -= time_step;
         part.position += part.velocity * time_step;
-        part.rotation += 0.01f * time_step;
+        part.velocity += part.acceleration * time_step;
+        // part.rotation += 0.01f * time_step;
 
     }
 
 }
 
 void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_matrix){
+    GLenum error;
 
     glUseProgram(shader_id);
 
@@ -190,7 +216,7 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 
 }
 
-void ParticleSystem::Emit(const ParticleProps &props){
+void ParticleSystem::emit(const ParticleProps &props){
 
     Particle& part = this->particle_pool[pool_index];
     part.active = true;
