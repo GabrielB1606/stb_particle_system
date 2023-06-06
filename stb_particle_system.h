@@ -37,6 +37,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 
 // All atributes that can be asigned to the particle system from software
 struct ParticleProps{
@@ -54,6 +55,8 @@ enum PSenum{
 
 class ParticleSystem{
 
+public:
+
     struct Particle{
         glm::vec3 position;
         glm::vec3 velocity, acceleration;
@@ -64,8 +67,12 @@ class ParticleSystem{
         float life_time = 1.f;
         float life_remaining = 0.f;
 
+        float distance_from_camera = 0.f;
+
         bool active = false;
     };
+
+private:
 
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 999;
@@ -91,11 +98,13 @@ public:
     void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
     void attatchProps(const ParticleProps& props);
 
-    void onUpdate(float time_step);
+    void onUpdate(float time_step, glm::vec3 camera_position);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
 
     void emit(const ParticleProps& props);
 };
+
+bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
 
 #endif // Header
 
@@ -155,7 +164,7 @@ void ParticleSystem::attatchProps(const ParticleProps &props){
     this->props = props; 
 }
 
-void ParticleSystem::onUpdate(float time_step){
+void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
 
     curr_spawn_rate += time_step;
     if(curr_spawn_rate > spawn_rate){
@@ -175,14 +184,17 @@ void ParticleSystem::onUpdate(float time_step){
         part.life_remaining -= time_step;
         part.position += part.velocity * time_step;
         part.velocity += part.acceleration * time_step;
+        part.distance_from_camera = glm::distance(part.position, camera_position);
         // part.rotation += 0.01f * time_step;
 
     }
 
+    std::sort(particle_pool.begin(), particle_pool.end(), compareParticles);
+
 }
 
 void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_matrix){
-    GLenum error;
+    // GLenum error;
 
     glUseProgram(shader_id);
 
@@ -240,6 +252,11 @@ void ParticleSystem::emit(const ParticleProps &props){
 
     pool_index = --pool_index % particle_pool.size();
 
+}
+
+// Define a custom comparison function based on your sorting criterion
+bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2) {
+    return obj1.distance_from_camera < obj2.distance_from_camera;
 }
 
 #endif // Implementation
