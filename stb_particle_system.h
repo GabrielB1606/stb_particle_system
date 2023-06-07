@@ -48,7 +48,7 @@ struct ParticleProps{
     glm::vec3 velocity = glm::vec3(0.f), velocity_variation = glm::vec3(0.f), acceleration = glm::vec3(0.f);
     glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f), color_variation = glm::vec4(0.f); // color of the particle
     float size_begin = 1.f, size_end = 1.f, size_variation = 0.f; // size of the particle
-    float life_time = 2.f; // how long should a particle be render
+    float life_time = 2.f, life_time_variation = 0.f; // how long should a particle be render
 };
 
 enum PSenum{
@@ -78,8 +78,8 @@ public:
 private:
 
     std::vector<Particle> particle_pool;
-    uint32_t pool_index = 999;
-    float spawn_rate = 3.f, curr_spawn_rate = -1.f;
+    uint32_t pool_index = 9999;
+    float spawn_rate = 0.001f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
     ParticleProps props;
     bool playing = true;
     float reproduction_speed = 1.f;
@@ -110,7 +110,11 @@ public:
     void play();
     void setReproductionSpeed(float speed);
 
+    void setRenderMode(GLenum mode);
+    void setPointSize(float point_size);
+
     void emit(const ParticleProps& props);
+    void setSpawnRateVariation(float var);
 };
 
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
@@ -154,9 +158,8 @@ inline void ParticleSystem::psDrawElementsBaseVertex(unsigned int shader_id){
 }
 
 ParticleSystem::ParticleSystem(){
-    particle_pool.resize(1000);
+    particle_pool.resize(pool_index+1);
     curr_spawn_rate = 0.f;
-
 }
 
 void ParticleSystem::attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex){
@@ -180,10 +183,10 @@ void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
     
     time_step *= reproduction_speed;
 
-    curr_spawn_rate += time_step;
-    if(curr_spawn_rate > spawn_rate){
+    curr_spawn_rate -= time_step;
+    if(curr_spawn_rate < 0){
         this->emit(this->props);
-        curr_spawn_rate = 0.f;
+        curr_spawn_rate = spawn_rate + (spawn_rate_variation*RANDOM_VAL - 0.5f);
     }
 
     for(Particle& part : particle_pool){
@@ -255,6 +258,14 @@ void ParticleSystem::setReproductionSpeed(float speed){
     this->reproduction_speed = speed;
 }
 
+void ParticleSystem::setRenderMode(GLenum mode){
+    this->mode = mode;
+}
+
+void ParticleSystem::setPointSize(float point_size){
+    glPointSize(point_size);
+}
+
 void ParticleSystem::emit(const ParticleProps &props){
 
     Particle& part = this->particle_pool[pool_index];
@@ -290,13 +301,17 @@ void ParticleSystem::emit(const ParticleProps &props){
         props.color_end.a + ((RANDOM_VAL-0.5f)*props.color_variation.a)
     );
 
-    part.life_time = props.life_time;
+    part.life_time = props.life_time + ((RANDOM_VAL-0.5f)*props.life_time_variation);
     part.life_remaining = props.life_time;
     part.size_begin = props.size_begin + props.size_variation* ( RANDOM_VAL - 0.5f );
     part.size_end = props.size_end;
 
     pool_index = --pool_index % particle_pool.size();
 
+}
+
+void ParticleSystem::setSpawnRateVariation(float var){
+    this->spawn_rate_variation = var;
 }
 
 // Define a custom comparison function based on your sorting criterion
