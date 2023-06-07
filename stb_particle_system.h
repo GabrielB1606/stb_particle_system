@@ -63,6 +63,7 @@ public:
     struct Particle{
         glm::vec3 position;
         glm::vec3 velocity, acceleration;
+        float acceleration_sensitivity = 1.f;
         glm::vec4 color_begin, color_end;
         float rotation = 0.f;
         float size_begin, size_end;
@@ -82,6 +83,7 @@ private:
     float spawn_rate = 0.001f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
     ParticleProps props;
     bool playing = true;
+    bool acceleration_active = true;
     float reproduction_speed = 1.f;
 
     // particle model
@@ -117,6 +119,8 @@ public:
 
     void setBlendFunc(GLenum sfactor, GLenum dfactor);
     void setBlending(bool activate);
+
+    void toggleAcceleration(bool active);
 
     void emit(const ParticleProps& props);
     void setSpawnRateVariation(float var);
@@ -206,7 +210,10 @@ void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
 
         part.life_remaining -= time_step;
         part.position += part.velocity * time_step;
-        part.velocity += part.acceleration * time_step;
+
+        if(acceleration_active)
+            part.velocity += part.acceleration_sensitivity * part.acceleration * time_step;
+        
         part.distance_from_camera = glm::distance(part.position, camera_position);
         // part.rotation += 0.01f * time_step;
 
@@ -282,6 +289,10 @@ void ParticleSystem::setBlending(bool activate)
         glEnable(GL_BLEND);
     else
         glDisable(GL_BLEND);
+}
+
+void ParticleSystem::toggleAcceleration(bool active){
+    acceleration_active = active;
 }
 
 void ParticleSystem::emit(const ParticleProps &props)
