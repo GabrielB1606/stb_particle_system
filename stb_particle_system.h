@@ -80,7 +80,7 @@ private:
 
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 9999;
-    float spawn_rate = 0.001f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
+    float spawn_rate = 3.f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
     ParticleProps props;
     bool playing = true;
     bool acceleration_active = true;
@@ -94,6 +94,9 @@ private:
     void* indices = nullptr;
     GLint basevertex = 0;
 
+    unsigned int billboard_texture = -1;
+    bool use_texture = true;
+
     GLenum blending_dfactor = GL_ONE_MINUS_SRC_ALPHA;
 
     unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
@@ -106,6 +109,7 @@ public:
 
     void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
     void attatchProps(const ParticleProps& props);
+    void attatchTexture(unsigned int texture_id);
 
     void onUpdate(float time_step, glm::vec3 camera_position);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
@@ -121,6 +125,7 @@ public:
     void setBlending(bool activate);
 
     void toggleAcceleration(bool active);
+    void toggleTexture(bool active);
 
     void emit(const ParticleProps& props);
     void setSpawnRateVariation(float var);
@@ -185,6 +190,10 @@ void ParticleSystem::attatchProps(const ParticleProps &props){
     this->props = props; 
 }
 
+void ParticleSystem::attatchTexture(unsigned int texture_id){
+    this->billboard_texture = texture_id;
+}
+
 void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
     
     if(!playing)
@@ -235,6 +244,12 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 
 	glUniformMatrix4fv(projview_uniform_loc, 1, GL_FALSE, glm::value_ptr(projection_view_matrix));
 
+    if( use_texture && billboard_texture != -1 ){
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture( GL_TEXTURE_2D, billboard_texture );
+    }
+
+
     for (Particle& particle : particle_pool){
 		if (!particle.active)
 			continue;
@@ -256,6 +271,11 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 		
         psDrawElementsBaseVertex(shader_id);
 	}
+
+    if( use_texture && billboard_texture != -1){
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
 }
 
@@ -293,6 +313,10 @@ void ParticleSystem::setBlending(bool activate)
 
 void ParticleSystem::toggleAcceleration(bool active){
     acceleration_active = active;
+}
+
+void ParticleSystem::toggleTexture(bool active){
+    use_texture = active;
 }
 
 void ParticleSystem::emit(const ParticleProps &props)
