@@ -87,12 +87,14 @@ private:
     float reproduction_speed = 1.f;
 
     // particle model
-    unsigned int VAO = 0;
+    unsigned int VAO = 0, VBO = 0;
     GLenum mode = GL_TRIANGLES;
     GLsizei indices_count = 0;
     GLenum indices_type = GL_UNSIGNED_INT;
     void* indices = nullptr;
     GLint basevertex = 0;
+
+    bool point_mode = false;
 
     unsigned int billboard_texture = -1;
     bool use_texture = true;
@@ -102,11 +104,15 @@ private:
     unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
 
     void psDrawElementsBaseVertex(unsigned int shader_id);
+    void psDrawPoint(unsigned int shader_id);
+    void cleanVAO();
     // void psDrawElements(glm::mat4 projection_view_matrix);
 
 public:
     ParticleSystem();
+    ~ParticleSystem();
 
+    void pointMode();
     void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
     void attatchProps(const ParticleProps& props);
     void attatchTexture(unsigned int texture_id);
@@ -171,19 +177,88 @@ inline void ParticleSystem::psDrawElementsBaseVertex(unsigned int shader_id){
 
 }
 
+void ParticleSystem::psDrawPoint(unsigned int shader_id){
+    GLenum error;
+
+    error = glGetError();
+    if (error != GL_NO_ERROR) 
+        std::cerr << "stb_particle_system psUseProgram\nOpenGL error: " << error << std::endl;
+
+    glUseProgram(shader_id);
+
+    error = glGetError();
+    if (error != GL_NO_ERROR) 
+        std::cerr << "stb_particle_system psUseProgram\nOpenGL error: " << error << std::endl;
+    // Render the point
+    glBindVertexArray(this->VAO);
+    
+    error = glGetError();
+    if (error != GL_NO_ERROR) 
+        std::cerr << "stb_particle_system psUseProgram\nOpenGL error: " << error << std::endl;
+    
+    glDrawArrays(GL_POINTS, 0, 1);
+    
+    error = glGetError();
+    if (error != GL_NO_ERROR) 
+        std::cerr << "stb_particle_system psUseProgram\nOpenGL error: " << error << std::endl;
+    
+    // glBindVertexArray(0);
+}
+
+void ParticleSystem::cleanVAO(){
+    if( point_mode && this->VBO != 0 ){
+        glDeleteBuffers(1, &this->VBO);
+        glDeleteVertexArrays(1, &this->VAO);
+        this->VAO = 0;
+        this->VBO = 0;
+    }
+}
+
 ParticleSystem::ParticleSystem(){
     particle_pool.resize(pool_index+1);
     curr_spawn_rate = 0.f;
 }
 
-void ParticleSystem::attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex){
+ParticleSystem::~ParticleSystem(){
+
+    this->cleanVAO();
+
+}
+
+void ParticleSystem::pointMode(){
+    point_mode = true;
+    
+    // Create a vertex array object (VAO) and vertex buffer object (VBO)
+    glGenVertexArrays(1, &this->VAO);
+    glGenBuffers(1, &this->VBO);
+
+    // Bind the VAO and VBO
+    glBindVertexArray(this->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+
+    // Specify the position of the point
+    GLfloat pointPosition[] = { 0.0f, 0.0f, 0.0f };
+
+    // Upload the point position data to the VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pointPosition), pointPosition, GL_STATIC_DRAW);
+
+    // Set the vertex attribute pointer for the position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    // Unbind the VAO and VBO
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+}
+
+void ParticleSystem::attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void *indices, GLint basevertex){
 
     this->VAO = VAO;
     this->indices_count = count;
     this->indices_type = type;
     this->indices = indices;
     this->basevertex = basevertex;
-
 }
 
 void ParticleSystem::attatchProps(const ParticleProps &props){
@@ -269,8 +344,12 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 		glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transform));
 		glUniform4fv(color_uniform_loc, 1, glm::value_ptr(color));
 		
-        psDrawElementsBaseVertex(shader_id);
-	}
+        if( point_mode )
+            psDrawPoint(shader_id);
+        else
+            psDrawElementsBaseVertex(shader_id);
+	
+    }
 
     if( use_texture && billboard_texture != -1){
         glActiveTexture(GL_TEXTURE0);
