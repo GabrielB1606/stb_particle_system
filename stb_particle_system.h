@@ -92,6 +92,8 @@ private:
     void* indices = nullptr;
     GLint basevertex = 0;
 
+    GLenum blending_dfactor = GL_ONE_MINUS_SRC_ALPHA;
+
     unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
 
     void psDrawElementsBaseVertex(unsigned int shader_id);
@@ -112,6 +114,9 @@ public:
 
     void setRenderMode(GLenum mode);
     void setPointSize(float point_size);
+
+    void setBlendFunc(GLenum sfactor, GLenum dfactor);
+    void setBlending(bool activate);
 
     void emit(const ParticleProps& props);
     void setSpawnRateVariation(float var);
@@ -207,7 +212,8 @@ void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
 
     }
 
-    std::sort(particle_pool.begin(), particle_pool.end(), compareParticles);
+    if( this->blending_dfactor == GL_SRC_ALPHA || this->blending_dfactor == GL_ONE_MINUS_SRC_ALPHA)
+        std::sort(particle_pool.begin(), particle_pool.end(), compareParticles);
 
 }
 
@@ -266,7 +272,20 @@ void ParticleSystem::setPointSize(float point_size){
     glPointSize(point_size);
 }
 
-void ParticleSystem::emit(const ParticleProps &props){
+void ParticleSystem::setBlendFunc(GLenum sfactor, GLenum dfactor){
+    glBlendFunc(sfactor, dfactor);
+}
+
+void ParticleSystem::setBlending(bool activate)
+{
+    if(activate)
+        glEnable(GL_BLEND);
+    else
+        glDisable(GL_BLEND);
+}
+
+void ParticleSystem::emit(const ParticleProps &props)
+{
 
     Particle& part = this->particle_pool[pool_index];
     part.active = true;
@@ -307,7 +326,6 @@ void ParticleSystem::emit(const ParticleProps &props){
     part.size_end = props.size_end;
 
     pool_index = --pool_index % particle_pool.size();
-
 }
 
 void ParticleSystem::setSpawnRateVariation(float var){
