@@ -188,8 +188,10 @@ void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
 
     for(Particle& part : particle_pool){
         
-        if( part.life_remaining <= 0.f )
+        if( part.life_remaining <= 0.f)
             part.active = false;
+        else
+            part.active = true;
         
         if( !part.active )
             continue;        
