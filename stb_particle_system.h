@@ -105,8 +105,10 @@ public:
 
     void onUpdate(float time_step, glm::vec3 camera_position);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
+
     void pause();
     void play();
+    void setReproductionSpeed(float speed);
 
     void emit(const ParticleProps& props);
 };
@@ -245,6 +247,10 @@ void ParticleSystem::pause(){
 
 void ParticleSystem::play(){
     this->playing = true;
+}
+
+void ParticleSystem::setReproductionSpeed(float speed){
+    this->reproduction_speed = speed;
 }
 
 void ParticleSystem::emit(const ParticleProps &props){
