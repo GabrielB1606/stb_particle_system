@@ -273,6 +273,8 @@ void ParticleSystem::emit(const ParticleProps &props){
     part.velocity.y += props.velocity_variation.y * ( RANDOM_VAL - 0.5f );
     part.velocity.z += props.velocity_variation.z * ( RANDOM_VAL - 0.5f );
 
+    part.acceleration = props.acceleration;
+
     // color
     part.color_begin = glm::vec4(
         props.color_begin.r + ((RANDOM_VAL-0.5f)*props.color_variation.r),
@@ -299,7 +301,7 @@ void ParticleSystem::emit(const ParticleProps &props){
 
 // Define a custom comparison function based on your sorting criterion
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2) {
-    return obj1.distance_from_camera < obj2.distance_from_camera;
+    return obj1.distance_from_camera > obj2.distance_from_camera;
 }
 
 #endif // Implementation
