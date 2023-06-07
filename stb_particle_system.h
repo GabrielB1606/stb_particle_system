@@ -39,11 +39,14 @@
 #include <ctime>
 #include <algorithm>
 
+#define RANDOM_VAL ((float) rand() / RAND_MAX) // random float between 0 and 1
+
 // All atributes that can be asigned to the particle system from software
 struct ParticleProps{
     glm::vec3 position = glm::vec3(0.f); // where the particles will be generated
+    glm::vec3 boundaries[2] = {glm::vec3(0.f), glm::vec3(0.f)};
     glm::vec3 velocity = glm::vec3(0.f), velocity_variation = glm::vec3(0.f), acceleration = glm::vec3(0.f);
-    glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f); // color of the particle
+    glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f), color_variation = glm::vec4(0.f); // color of the particle
     float size_begin = 1.f, size_end = 1.f, size_variation = 0.f; // size of the particle
     float life_time = 2.f; // how long should a particle be render
 };
@@ -170,7 +173,6 @@ void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
     if(curr_spawn_rate > spawn_rate){
         this->emit(this->props);
         curr_spawn_rate = 0.f;
-        std::cout << "gen\n";   
     }
 
     for(Particle& part : particle_pool){
@@ -232,22 +234,38 @@ void ParticleSystem::emit(const ParticleProps &props){
 
     Particle& part = this->particle_pool[pool_index];
     part.active = true;
+
     part.position = props.position;
-    part.rotation = ((float) rand() / RAND_MAX) * 2.f * glm::pi<float>();
+    part.position.x += glm::lerp(props.boundaries[0].x, props.boundaries[1].x, RANDOM_VAL);
+    part.position.y += glm::lerp(props.boundaries[0].y, props.boundaries[1].y, RANDOM_VAL);
+    part.position.z += glm::lerp(props.boundaries[0].z, props.boundaries[1].z, RANDOM_VAL);
+
+    part.rotation = RANDOM_VAL * 2.f * glm::pi<float>();
 
     // velocity
     part.velocity = props.velocity;
-    part.velocity.x += props.velocity_variation.x * ( ((float) rand() / RAND_MAX) - 0.5f );
-    part.velocity.y += props.velocity_variation.y * ( ((float) rand() / RAND_MAX) - 0.5f );
-    part.velocity.z += props.velocity_variation.z * ( ((float) rand() / RAND_MAX) - 0.5f );
+    part.velocity.x += props.velocity_variation.x * ( RANDOM_VAL - 0.5f );
+    part.velocity.y += props.velocity_variation.y * ( RANDOM_VAL - 0.5f );
+    part.velocity.z += props.velocity_variation.z * ( RANDOM_VAL - 0.5f );
 
     // color
-    part.color_begin = props.color_begin;
-    part.color_end = props.color_end;
+    part.color_begin = glm::vec4(
+        props.color_begin.r + ((RANDOM_VAL-0.5f)*props.color_variation.r),
+        props.color_begin.g + ((RANDOM_VAL-0.5f)*props.color_variation.g),
+        props.color_begin.b + ((RANDOM_VAL-0.5f)*props.color_variation.b),
+        props.color_begin.a + ((RANDOM_VAL-0.5f)*props.color_variation.a)
+    );
+
+    part.color_end = glm::vec4(
+        props.color_end.r + ((RANDOM_VAL-0.5f)*props.color_variation.r),
+        props.color_end.g + ((RANDOM_VAL-0.5f)*props.color_variation.g),
+        props.color_end.b + ((RANDOM_VAL-0.5f)*props.color_variation.b),
+        props.color_end.a + ((RANDOM_VAL-0.5f)*props.color_variation.a)
+    );
 
     part.life_time = props.life_time;
     part.life_remaining = props.life_time;
-    part.size_begin = props.size_begin + props.size_variation* ( ((float) rand() / RAND_MAX) - 0.5f );
+    part.size_begin = props.size_begin + props.size_variation* ( RANDOM_VAL - 0.5f );
     part.size_end = props.size_end;
 
     pool_index = --pool_index % particle_pool.size();
