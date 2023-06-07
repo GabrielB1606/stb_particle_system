@@ -81,6 +81,8 @@ private:
     uint32_t pool_index = 999;
     float spawn_rate = 3.f, curr_spawn_rate = -1.f;
     ParticleProps props;
+    bool playing = true;
+    float reproduction_speed = 1.f;
 
     // particle model
     unsigned int VAO = 0;
@@ -103,6 +105,8 @@ public:
 
     void onUpdate(float time_step, glm::vec3 camera_position);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
+    void pause();
+    void play();
 
     void emit(const ParticleProps& props);
 };
@@ -168,6 +172,11 @@ void ParticleSystem::attatchProps(const ParticleProps &props){
 }
 
 void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
+    
+    if(!playing)
+        return;
+    
+    time_step *= reproduction_speed;
 
     curr_spawn_rate += time_step;
     if(curr_spawn_rate > spawn_rate){
@@ -228,6 +237,14 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
         psDrawElementsBaseVertex(shader_id);
 	}
 
+}
+
+void ParticleSystem::pause(){
+    this->playing = false;
+}
+
+void ParticleSystem::play(){
+    this->playing = true;
 }
 
 void ParticleSystem::emit(const ParticleProps &props){
