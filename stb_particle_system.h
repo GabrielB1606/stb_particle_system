@@ -135,6 +135,10 @@ public:
 
     void emit(const ParticleProps& props);
     void setSpawnRateVariation(float var);
+
+    ParticleProps* getPropsReference();
+    float* getSpawnRateReference();
+    float* getSpawnRateVarReference();
 };
 
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
@@ -444,6 +448,18 @@ void ParticleSystem::emit(const ParticleProps &props)
 
 void ParticleSystem::setSpawnRateVariation(float var){
     this->spawn_rate_variation = var;
+}
+
+ParticleProps *ParticleSystem::getPropsReference(){
+    return &this->props;
+}
+
+float *ParticleSystem::getSpawnRateReference(){
+    return &this->spawn_rate;
+}
+
+float *ParticleSystem::getSpawnRateVarReference(){
+    return &this->spawn_rate_variation;
 }
 
 // Define a custom comparison function based on your sorting criterion
