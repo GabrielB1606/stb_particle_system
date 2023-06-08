@@ -46,6 +46,7 @@ struct ParticleProps{
     glm::vec3 position = glm::vec3(0.f); // where the particles will be generated
     glm::vec3 boundaries[2] = {glm::vec3(0.f), glm::vec3(0.f)};
     glm::vec3 velocity = glm::vec3(0.f), velocity_variation = glm::vec3(0.f), acceleration = glm::vec3(0.f);
+    float acceleration_sensitivity = 1.f;
     glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f), color_variation = glm::vec4(0.f); // color of the particle
     float size_begin = 1.f, size_end = 1.f, size_variation = 0.f; // size of the particle
     float life_time = 2.f, life_time_variation = 0.f; // how long should a particle be render
@@ -116,12 +117,16 @@ public:
     void attatchVAO(unsigned int VAO, GLsizei count, GLenum type, void* indices, GLint basevertex = 0);
     void attatchProps(const ParticleProps& props);
     void attatchTexture(unsigned int texture_id);
+    void useTexture(bool use);
+    bool getUseTexture();
 
     void onUpdate(float time_step, glm::vec3 camera_position);
     void onRender(unsigned int shader_id, glm::mat4 projection_view_matrix);
 
     void pause();
     void play();
+    void togglePlay();
+    bool isPlaying();
     void setReproductionSpeed(float speed);
 
     void setRenderMode(GLenum mode);
@@ -131,6 +136,7 @@ public:
     void setBlending(bool activate);
 
     void toggleAcceleration(bool active);
+    bool isAccelerationActive();
     void toggleTexture(bool active);
 
     void emit(const ParticleProps& props);
@@ -139,6 +145,7 @@ public:
     ParticleProps* getPropsReference();
     float* getSpawnRateReference();
     float* getSpawnRateVarReference();
+    float* getReproductionSpeedReference();
 };
 
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
@@ -273,6 +280,14 @@ void ParticleSystem::attatchTexture(unsigned int texture_id){
     this->billboard_texture = texture_id;
 }
 
+void ParticleSystem::useTexture(bool use){
+    this->use_texture = use;
+}
+
+bool ParticleSystem::getUseTexture(){
+    return this->use_texture;
+}
+
 void ParticleSystem::onUpdate(float time_step, glm::vec3 camera_position){
     
     if(!playing)
@@ -370,6 +385,14 @@ void ParticleSystem::play(){
     this->playing = true;
 }
 
+void ParticleSystem::togglePlay(){
+    this->playing = !this->playing;
+}
+
+bool ParticleSystem::isPlaying(){
+    return this->playing;
+}
+
 void ParticleSystem::setReproductionSpeed(float speed){
     this->reproduction_speed = speed;
 }
@@ -396,6 +419,10 @@ void ParticleSystem::setBlending(bool activate)
 
 void ParticleSystem::toggleAcceleration(bool active){
     acceleration_active = active;
+}
+
+bool ParticleSystem::isAccelerationActive(){
+    return this->acceleration_active;
 }
 
 void ParticleSystem::toggleTexture(bool active){
@@ -442,6 +469,7 @@ void ParticleSystem::emit(const ParticleProps &props)
     part.life_remaining = props.life_time;
     part.size_begin = props.size_begin + props.size_variation* ( RANDOM_VAL - 0.5f );
     part.size_end = props.size_end;
+    part.acceleration_sensitivity = props.acceleration_sensitivity;
 
     pool_index = --pool_index % particle_pool.size();
 }
@@ -460,6 +488,10 @@ float *ParticleSystem::getSpawnRateReference(){
 
 float *ParticleSystem::getSpawnRateVarReference(){
     return &this->spawn_rate_variation;
+}
+
+float *ParticleSystem::getReproductionSpeedReference(){
+    return &this->reproduction_speed;
 }
 
 // Define a custom comparison function based on your sorting criterion
