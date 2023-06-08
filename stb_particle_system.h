@@ -79,6 +79,20 @@ public:
 
 private:
 
+    GLenum blendFactors[10] = {
+        GL_ZERO,
+        GL_ONE,
+        GL_SRC_COLOR,
+        GL_ONE_MINUS_SRC_COLOR,
+        GL_DST_COLOR,
+        GL_ONE_MINUS_DST_COLOR,
+        GL_SRC_ALPHA,
+        GL_ONE_MINUS_SRC_ALPHA,
+        GL_DST_ALPHA,
+        GL_ONE_MINUS_DST_ALPHA
+    };
+    int curr_sfactor = 6, curr_dfactor = 7;
+
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 9999;
     float spawn_rate = 3.f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
@@ -101,6 +115,7 @@ private:
     bool use_texture = true;
 
     GLenum blending_dfactor = GL_ONE_MINUS_SRC_ALPHA;
+    bool use_blending = true;
 
     unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
 
@@ -134,6 +149,12 @@ public:
 
     void setBlendFunc(GLenum sfactor, GLenum dfactor);
     void setBlending(bool activate);
+    void enableBlending();
+    void disableBlending();
+    int getSFactor();
+    int getDFactor();
+    void setSFactor(int factor_index);
+    void setDFactor(int factor_index);
 
     void toggleAcceleration(bool active);
     bool isAccelerationActive();
@@ -146,6 +167,7 @@ public:
     float* getSpawnRateReference();
     float* getSpawnRateVarReference();
     float* getReproductionSpeedReference();
+    bool useBlending();
 };
 
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
@@ -417,6 +439,34 @@ void ParticleSystem::setBlending(bool activate)
         glDisable(GL_BLEND);
 }
 
+void ParticleSystem::enableBlending(){
+    use_blending = true;
+    glEnable(GL_BLEND);
+}
+
+void ParticleSystem::disableBlending(){
+    use_blending = false;
+    glDisable(GL_BLEND);
+}
+
+int ParticleSystem::getSFactor(){
+    return this->curr_sfactor;
+}
+
+int ParticleSystem::getDFactor(){
+    return this->curr_dfactor;
+}
+
+void ParticleSystem::setSFactor(int factor_index){
+    curr_sfactor = factor_index;
+    glBlendFunc(blendFactors[curr_sfactor], blendFactors[curr_dfactor]);
+}
+
+void ParticleSystem::setDFactor(int factor_index){
+    curr_dfactor = factor_index;
+    glBlendFunc(blendFactors[curr_sfactor], blendFactors[curr_dfactor]);
+}
+
 void ParticleSystem::toggleAcceleration(bool active){
     acceleration_active = active;
 }
@@ -492,6 +542,10 @@ float *ParticleSystem::getSpawnRateVarReference(){
 
 float *ParticleSystem::getReproductionSpeedReference(){
     return &this->reproduction_speed;
+}
+
+bool ParticleSystem::useBlending(){
+    return this->use_blending;
 }
 
 // Define a custom comparison function based on your sorting criterion
