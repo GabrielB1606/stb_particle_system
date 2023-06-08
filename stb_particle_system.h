@@ -93,6 +93,13 @@ private:
     };
     int curr_sfactor = 6, curr_dfactor = 7;
 
+    GLenum renderModes[3] = {
+        GL_POINTS,
+        GL_LINES,
+        GL_TRIANGLES
+    };
+    int curr_render_mode_index = 0;
+
     std::vector<Particle> particle_pool;
     uint32_t pool_index = 9999;
     float spawn_rate = 3.f, curr_spawn_rate = -1.f, spawn_rate_variation = 0.f;
@@ -145,6 +152,8 @@ public:
     void setReproductionSpeed(float speed);
 
     void setRenderMode(GLenum mode);
+    int getRenderModeInd();
+    void setRenderModeInd(int index);
     void setPointSize(float point_size);
 
     void setBlendFunc(GLenum sfactor, GLenum dfactor);
@@ -421,6 +430,20 @@ void ParticleSystem::setReproductionSpeed(float speed){
 
 void ParticleSystem::setRenderMode(GLenum mode){
     this->mode = mode;
+}
+
+int ParticleSystem::getRenderModeInd(){
+    return this->curr_render_mode_index;
+}
+
+void ParticleSystem::setRenderModeInd(int index){
+    curr_render_mode_index = index;
+    setRenderMode(renderModes[index]);
+    if(index == 0)
+        point_mode = true;
+    else
+        point_mode = false;
+
 }
 
 void ParticleSystem::setPointSize(float point_size){
