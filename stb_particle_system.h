@@ -38,6 +38,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <unordered_map>
+#include <sstream>
+#include <iomanip>
 
 #define RANDOM_VAL ((float) rand() / RAND_MAX) // random float between 0 and 1
 
@@ -50,6 +53,136 @@ struct ParticleProps{
     glm::vec4 color_begin = glm::vec4(1.f), color_end = glm::vec4(1.f), color_variation = glm::vec4(0.f); // color of the particle
     float size_begin = 1.f, size_end = 1.f, size_variation = 0.f; // size of the particle
     float life_time = 2.f, life_time_variation = 0.f; // how long should a particle be render
+
+    static ParticleProps parseYAML(const std::string& yamlString) {
+        ParticleProps props;
+
+        std::istringstream iss(yamlString);
+        std::string line;
+        std::unordered_map<std::string, std::string> keyValuePairs;
+
+        while (std::getline(iss, line)) {
+            std::istringstream lineIss(line);
+            std::string key, value;
+            std::getline(lineIss, key, ':');
+            std::getline(lineIss, value);
+            key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
+            value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
+            keyValuePairs[key] = value;
+        }
+
+        props.position.x = std::stof(keyValuePairs["x"]);
+        props.position.y = std::stof(keyValuePairs["y"]);
+        props.position.z = std::stof(keyValuePairs["z"]);
+
+        props.boundaries[0].x = std::stof(keyValuePairs["x"]);
+        props.boundaries[0].y = std::stof(keyValuePairs["y"]);
+        props.boundaries[0].z = std::stof(keyValuePairs["z"]);
+
+        props.boundaries[1].x = std::stof(keyValuePairs["x"]);
+        props.boundaries[1].y = std::stof(keyValuePairs["y"]);
+        props.boundaries[1].z = std::stof(keyValuePairs["z"]);
+
+        props.velocity.x = std::stof(keyValuePairs["x"]);
+        props.velocity.y = std::stof(keyValuePairs["y"]);
+        props.velocity.z = std::stof(keyValuePairs["z"]);
+
+        props.velocity_variation.x = std::stof(keyValuePairs["x"]);
+        props.velocity_variation.y = std::stof(keyValuePairs["y"]);
+        props.velocity_variation.z = std::stof(keyValuePairs["z"]);
+
+        props.acceleration.x = std::stof(keyValuePairs["x"]);
+        props.acceleration.y = std::stof(keyValuePairs["y"]);
+        props.acceleration.z = std::stof(keyValuePairs["z"]);
+
+        props.acceleration_sensitivity = std::stof(keyValuePairs["acceleration_sensitivity"]);
+
+        props.color_begin.r = std::stof(keyValuePairs["r"]);
+        props.color_begin.g = std::stof(keyValuePairs["g"]);
+        props.color_begin.b = std::stof(keyValuePairs["b"]);
+        props.color_begin.a = std::stof(keyValuePairs["a"]);
+
+        props.color_end.r = std::stof(keyValuePairs["r"]);
+        props.color_end.g = std::stof(keyValuePairs["g"]);
+        props.color_end.b = std::stof(keyValuePairs["b"]);
+        props.color_end.a = std::stof(keyValuePairs["a"]);
+
+        props.color_variation.r = std::stof(keyValuePairs["r"]);
+        props.color_variation.g = std::stof(keyValuePairs["g"]);
+        props.color_variation.b = std::stof(keyValuePairs["b"]);
+        props.color_variation.a = std::stof(keyValuePairs["a"]);
+
+        props.size_begin = std::stof(keyValuePairs["size_begin"]);
+        props.size_end = std::stof(keyValuePairs["size_end"]);
+        props.size_variation = std::stof(keyValuePairs["size_variation"]);
+        
+        props.life_time = std::stof(keyValuePairs["life_time"]);
+        props.life_time_variation = std::stof(keyValuePairs["life_time_variation"]);
+
+        return props;
+    }
+
+    static std::string toString(const ParticleProps& props) {
+        std::ostringstream oss;
+
+        oss << "position:" << std::endl;
+        oss << "  x: " << props.position.x << std::endl;
+        oss << "  y: " << props.position.y << std::endl;
+        oss << "  z: " << props.position.z << std::endl;
+
+        oss << "boundaries:" << std::endl;
+        oss << "  - x: " << props.boundaries[0].x << std::endl;
+        oss << "    y: " << props.boundaries[0].y << std::endl;
+        oss << "    z: " << props.boundaries[0].z << std::endl;
+        oss << "  - x: " << props.boundaries[1].x << std::endl;
+        oss << "    y: " << props.boundaries[1].y << std::endl;
+        oss << "    z: " << props.boundaries[1].z << std::endl;
+
+        oss << "velocity:" << std::endl;
+        oss << "  x: " << props.velocity.x << std::endl;
+        oss << "  y: " << props.velocity.y << std::endl;
+        oss << "  z: " << props.velocity.z << std::endl;
+
+        oss << "velocity_variation:" << std::endl;
+        oss << "  x: " << props.velocity_variation.x << std::endl;
+        oss << "  y: " << props.velocity_variation.y << std::endl;
+        oss << "  z: " << props.velocity_variation.z << std::endl;
+
+        oss << "acceleration:" << std::endl;
+        oss << "  x: " << props.acceleration.x << std::endl;
+        oss << "  y: " << props.acceleration.y << std::endl;
+        oss << "  z: " << props.acceleration.z << std::endl;
+
+        oss << "acceleration_sensitivity: " << props.acceleration_sensitivity << std::endl;
+
+        oss << "color_begin:" << std::endl;
+        oss << "  r: " << props.color_begin.r << std::endl;
+        oss << "  g: " << props.color_begin.g << std::endl;
+        oss << "  b: " << props.color_begin.b << std::endl;
+        oss << "  a: " << props.color_begin.a << std::endl;
+
+        oss << "color_end:" << std::endl;
+        oss << "  r: " << props.color_end.r << std::endl;
+        oss << "  g: " << props.color_end.g << std::endl;
+        oss << "  b: " << props.color_end.b << std::endl;
+        oss << "  a: " << props.color_end.a << std::endl;
+
+        oss << "color_variation:" << std::endl;
+        oss << "  r: " << props.color_variation.r << std::endl;
+        oss << "  g: " << props.color_variation.g << std::endl;
+        oss << "  b: " << props.color_variation.b << std::endl;
+        oss << "  a: " << props.color_variation.a << std::endl;
+
+        oss << "size_begin: " << props.size_begin << std::endl;
+        oss << "size_end: " << props.size_end << std::endl;
+        oss << "size_variation: " << props.size_variation << std::endl;
+
+        oss << "life_time: " << props.life_time << std::endl;
+        oss << "life_time_variation: " << props.life_time_variation << std::endl;
+
+        return oss.str();
+    }
+
 };
 
 enum PSenum{
