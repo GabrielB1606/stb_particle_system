@@ -125,7 +125,7 @@ private:
     GLenum blending_dfactor = GL_ONE_MINUS_SRC_ALPHA;
     bool use_blending = true;
 
-    unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc;
+    unsigned int transform_uniform_loc, color_uniform_loc, projview_uniform_loc, size_uniform_loc;
 
     void psDrawElementsBaseVertex(unsigned int shader_id);
     void psDrawPoint(unsigned int shader_id);
@@ -368,6 +368,7 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
     projview_uniform_loc = glGetUniformLocation(shader_id, "u_ProjView");
     transform_uniform_loc = glGetUniformLocation(shader_id, "u_Transform");
     color_uniform_loc = glGetUniformLocation(shader_id, "u_Color");
+    size_uniform_loc = glGetUniformLocation(shader_id, "u_Size");
 
 	glUniformMatrix4fv(projview_uniform_loc, 1, GL_FALSE, glm::value_ptr(projection_view_matrix));
 
@@ -399,6 +400,7 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
 
 		glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transform));
 		glUniform4fv(color_uniform_loc, 1, glm::value_ptr(color));
+        glUniform1f(size_uniform_loc, size);
 		
         if( point_mode )
             psDrawPoint(shader_id);
