@@ -117,6 +117,7 @@ private:
     GLint basevertex = 0;
 
     bool point_mode = false;
+    float point_size = 1.f;
 
     unsigned int billboard_texture = -1;
     bool use_texture = true;
@@ -176,6 +177,7 @@ public:
     float* getSpawnRateReference();
     float* getSpawnRateVarReference();
     float* getReproductionSpeedReference();
+    float* getPointSizeReference();
     bool useBlending();
 };
 
@@ -374,6 +376,10 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
         glBindTexture( GL_TEXTURE_2D, billboard_texture );
     }
 
+    GLfloat currPointSize;
+    glGetFloatv(GL_POINT_SIZE, &currPointSize); 
+    
+    glPointSize(point_size);
 
     for (Particle& particle : particle_pool){
 		if (!particle.active)
@@ -405,6 +411,8 @@ void ParticleSystem::onRender(unsigned int shader_id, glm::mat4 projection_view_
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    glPointSize(currPointSize);
 
 }
 
@@ -502,8 +510,7 @@ void ParticleSystem::toggleTexture(bool active){
     use_texture = active;
 }
 
-void ParticleSystem::emit(const ParticleProps &props)
-{
+void ParticleSystem::emit(const ParticleProps &props){
 
     Particle& part = this->particle_pool[pool_index];
     part.active = true;
@@ -565,6 +572,10 @@ float *ParticleSystem::getSpawnRateVarReference(){
 
 float *ParticleSystem::getReproductionSpeedReference(){
     return &this->reproduction_speed;
+}
+
+float *ParticleSystem::getPointSizeReference(){
+    return &this->point_size;
 }
 
 bool ParticleSystem::useBlending(){
