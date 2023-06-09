@@ -56,70 +56,75 @@ struct ParticleProps{
 
     static ParticleProps parseYAML(const std::string& yamlString) {
         ParticleProps props;
+        std::istringstream stream(yamlString);
+        std::string line, dummy;
 
-        std::istringstream iss(yamlString);
-        std::string line;
-        std::unordered_map<std::string, std::string> keyValuePairs;
+        std::getline(stream, line); // Skip "position:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.position.x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.position.y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.position.z;
 
-        while (std::getline(iss, line)) {
-            std::istringstream lineIss(line);
-            std::string key, value;
-            std::getline(lineIss, key, ':');
-            std::getline(lineIss, value);
-            key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
-            value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
-            keyValuePairs[key] = value;
-        }
+        std::getline(stream, line); // Skip "boundaries:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[0].x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[0].y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[0].z;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[1].x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[1].y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.boundaries[1].z;
 
-        props.position.x = std::stof(keyValuePairs["x"]);
-        props.position.y = std::stof(keyValuePairs["y"]);
-        props.position.z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "velocity:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity.x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity.y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity.z;
 
-        props.boundaries[0].x = std::stof(keyValuePairs["x"]);
-        props.boundaries[0].y = std::stof(keyValuePairs["y"]);
-        props.boundaries[0].z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "velocity_variation:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity_variation.x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity_variation.y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.velocity_variation.z;
 
-        props.boundaries[1].x = std::stof(keyValuePairs["x"]);
-        props.boundaries[1].y = std::stof(keyValuePairs["y"]);
-        props.boundaries[1].z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "acceleration:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.acceleration.x;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.acceleration.y;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.acceleration.z;
 
-        props.velocity.x = std::stof(keyValuePairs["x"]);
-        props.velocity.y = std::stof(keyValuePairs["y"]);
-        props.velocity.z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "acceleration_sensitivity:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.acceleration_sensitivity;
 
-        props.velocity_variation.x = std::stof(keyValuePairs["x"]);
-        props.velocity_variation.y = std::stof(keyValuePairs["y"]);
-        props.velocity_variation.z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "color_begin:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_begin.r;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_begin.g;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_begin.b;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_begin.a;
 
-        props.acceleration.x = std::stof(keyValuePairs["x"]);
-        props.acceleration.y = std::stof(keyValuePairs["y"]);
-        props.acceleration.z = std::stof(keyValuePairs["z"]);
+        std::getline(stream, line); // Skip "color_end:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_end.r;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_end.g;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_end.b;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_end.a;
 
-        props.acceleration_sensitivity = std::stof(keyValuePairs["acceleration_sensitivity"]);
+        std::getline(stream, line); // Skip "color_variation:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_variation.r;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_variation.g;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_variation.b;
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.color_variation.a;
 
-        props.color_begin.r = std::stof(keyValuePairs["r"]);
-        props.color_begin.g = std::stof(keyValuePairs["g"]);
-        props.color_begin.b = std::stof(keyValuePairs["b"]);
-        props.color_begin.a = std::stof(keyValuePairs["a"]);
+        std::getline(stream, line); // Skip "size_begin:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.size_begin;
 
-        props.color_end.r = std::stof(keyValuePairs["r"]);
-        props.color_end.g = std::stof(keyValuePairs["g"]);
-        props.color_end.b = std::stof(keyValuePairs["b"]);
-        props.color_end.a = std::stof(keyValuePairs["a"]);
+        std::getline(stream, line); // Skip "size_end:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.size_end;
 
-        props.color_variation.r = std::stof(keyValuePairs["r"]);
-        props.color_variation.g = std::stof(keyValuePairs["g"]);
-        props.color_variation.b = std::stof(keyValuePairs["b"]);
-        props.color_variation.a = std::stof(keyValuePairs["a"]);
+        std::getline(stream, line); // Skip "size_variation:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.size_variation;
 
-        props.size_begin = std::stof(keyValuePairs["size_begin"]);
-        props.size_end = std::stof(keyValuePairs["size_end"]);
-        props.size_variation = std::stof(keyValuePairs["size_variation"]);
-        
-        props.life_time = std::stof(keyValuePairs["life_time"]);
-        props.life_time_variation = std::stof(keyValuePairs["life_time_variation"]);
+        std::getline(stream, line); // Skip "life_time:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.life_time;
+
+        std::getline(stream, line); // Skip "life_time_variation:"
+        std::getline(stream, line); std::istringstream(line) >> dummy >> props.life_time_variation;
 
         return props;
+
     }
 
     static std::string toString(const ParticleProps& props) {
