@@ -312,6 +312,7 @@ public:
     float* getReproductionSpeedReference();
     float* getPointSizeReference();
     bool useBlending();
+    std::string getPropsYAML();
 };
 
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2);
@@ -715,6 +716,10 @@ float *ParticleSystem::getPointSizeReference(){
 
 bool ParticleSystem::useBlending(){
     return this->use_blending;
+}
+
+std::string ParticleSystem::getPropsYAML(){
+    return ParticleProps::toString(this->props);
 }
 
 // Define a custom comparison function based on your sorting criterion
