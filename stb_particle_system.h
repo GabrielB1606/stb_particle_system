@@ -729,7 +729,7 @@ std::string ParticleSystem::getPropsYAML(){
 
 // Define a custom comparison function based on your sorting criterion
 bool compareParticles(const ParticleSystem::Particle& obj1, const ParticleSystem::Particle& obj2) {
-    return obj1.distance_from_camera > obj2.distance_from_camera;
+    return obj1.distance_from_camera < obj2.distance_from_camera;
 }
 
 #endif // Implementation
